@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rust Raid Calc</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  max-width: 600px;
+  margin: 0 auto;
+}
+header {
+  background: #161b22;
+  border-bottom: 2px solid #ff6b35;
+  padding: 14px 16px 12px;
+  text-align: center;
+}
+header h1 { font-size: 1.4rem; font-weight: 800; color: #ff6b35; letter-spacing: 2px; }
+header p  { font-size: 0.75rem; color: #8b949e; margin-top: 2px; }
+
+.search-wrap {
+  padding: 10px 12px 6px;
+  background: #161b22;
+}
+.search-wrap input {
+  width: 100%; padding: 9px 12px;
+  background: #0d1117; border: 1px solid #30363d;
+  border-radius: 8px; color: #e6edf3; font-size: 0.9rem; outline: none;
+}
+.search-wrap input:focus { border-color: #ff6b35; }
+.search-wrap input::placeholder { color: #6e7681; }
+
+.filters {
+  display: flex; gap: 7px; padding: 6px 12px 10px;
+  overflow-x: auto; background: #161b22;
+  border-bottom: 1px solid #30363d;
+  scrollbar-width: none;
+}
+.filters::-webkit-scrollbar { display: none; }
+.fbtn {
+  padding: 5px 13px; border-radius: 20px;
+  border: 1px solid #30363d; background: transparent;
+  color: #8b949e; font-size: 0.78rem; white-space: nowrap;
+  cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+}
+.fbtn.on { background: #ff6b35; border-color: #ff6b35; color: #fff; font-weight: 700; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px; padding: 12px;
+}
+.card {
+  background: #161b22; border: 1px solid #30363d;
+  border-radius: 10px; padding: 12px 8px;
+  cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.card:hover  { border-color: #ff6b35; background: #1c2128; }
+.card.picked { border-color: #ff6b35; background: #1c2128;
+               box-shadow: 0 0 0 2px rgba(255,107,53,.25); }
+.card .ci { font-size: 1.9rem; margin-bottom: 5px; line-height: 1; }
+.card .cn { font-size: 0.75rem; font-weight: 600; color: #e6edf3; line-height: 1.25; }
+.card .ch { font-size: 0.68rem; color: #6e7681; margin-top: 3px; }
+
+/* result */
+.result { margin: 0 12px 16px; border-radius: 12px; overflow: hidden;
+          border: 1px solid #30363d; background: #161b22; }
+.rhead {
+  background: #21262d; padding: 11px 14px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid #30363d;
+}
+.rhead .ri { font-size: 1.4rem; }
+.rhead .rn { font-weight: 700; font-size: 1rem; }
+.rhead .rhp {
+  margin-left: auto; background: #0d1117;
+  border: 1px solid #30363d; border-radius: 6px;
+  padding: 3px 9px; font-size: 0.72rem; color: #ff6b35; font-weight: 700;
+}
+
+.row {
+  display: flex; align-items: center;
+  padding: 11px 14px; border-bottom: 1px solid #21262d; gap: 10px;
+}
+.row:last-of-type { border-bottom: none; }
+.row .ei { font-size: 1.3rem; width: 28px; text-align: center; }
+.row .ed { flex: 1; }
+.row .en { font-weight: 600; font-size: 0.88rem; }
+.row .eb { display: flex; gap: 5px; margin-top: 3px; flex-wrap: wrap; }
+.badge {
+  font-size: 0.62rem; font-weight: 700;
+  padding: 2px 7px; border-radius: 10px;
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+.b-fast { background: #1f6feb; color: #fff; }
+.b-eco  { background: #238636; color: #fff; }
+.b-best { background: #9e3c96; color: #fff; }
+
+.row .ec { font-size: 1.1rem; font-weight: 800; color: #ff6b35; width: 36px; text-align: right; }
+.row .es { font-size: 0.78rem; color: #8b949e; width: 110px; text-align: right; }
+.row .es span { color: #ffd700; font-weight: 700; }
+
+.rnote {
+  padding: 8px 14px; font-size: 0.72rem; color: #8b949e;
+  background: #0d1117; border-top: 1px solid #30363d; font-style: italic;
+}
+
+.empty { text-align: center; padding: 36px 20px; color: #6e7681; font-size: 0.9rem; }
+
+footer {
+  text-align: center; padding: 18px 16px;
+  color: #484f58; font-size: 0.68rem; line-height: 1.6;
+}
+footer a { color: #6e7681; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💥 RUST RAID CALC</h1>
+  <p>Fastest vs. Most Efficient — per target</p>
+</header>
+
+<div class="search-wrap">
+  <input id="q" type="text" placeholder="Search targets (e.g. armored, door, turret…)" oninput="render()">
+</div>
+
+<div class="filters" id="filters">
+  <button class="fbtn on" onclick="cat('All',this)">All</button>
+  <button class="fbtn" onclick="cat('Wall',this)">Walls</button>
+  <button class="fbtn" onclick="cat('Door',this)">Doors</button>
+  <button class="fbtn" onclick="cat('Deployable',this)">Deployables</button>
+  <button class="fbtn" onclick="cat('High Wall',this)">High Walls</button>
+</div>
+
+<div id="grid" class="grid"></div>
+<div id="result"></div>
+
+<footer>
+  Wall values = soft side unless noted. Satchels have a random re-arm chance — carry extras.<br>
+  Data from community wikis &amp; <a href="https://rustlabs.com" target="_blank">rustlabs.com</a>. Last verified 2025.
+</footer>
+
+<script>
+// Sulfur cost per item (total including all crafting materials)
+const EXP = {
+  rocket:  { label: "Rocket",          icon: "🚀", sulfur: 1400 },
+  c4:      { label: "Timed C4",        icon: "💣", sulfur: 2200 },
+  satchel: { label: "Satchel Charge",  icon: "🧨", sulfur:  480 },
+  beancan: { label: "Beancan Grenade", icon: "💥", sulfur:  120 },
+};
+
+// counts = minimum needed to destroy (soft side for walls where applicable)
+const ITEMS = [
+  // ── WALLS ──────────────────────────────────────────────────────────
+  { name:"Wood Wall",     cat:"Wall",      icon:"🪵", hp:250,
+    note:"No side preference on wood.",
+    c:{ rocket:2, c4:1, satchel:3, beancan:10 } },
+
+  { name:"Stone Wall",    cat:"Wall",      icon:"🪨", hp:500,
+    note:"Soft side. Hard side needs ~5 rockets / 2 C4 / 12 satchels.",
+    c:{ rocket:4, c4:1, satchel:10 } },
+
+  { name:"Metal Wall",    cat:"Wall",      icon:"🔩", hp:1000,
+    note:"Soft side. Hard side needs ~8 rockets / 8 C4 / 40 satchels.",
+    c:{ rocket:4, c4:4, satchel:23 } },
+
+  { name:"Armored Wall",  cat:"Wall",      icon:"🛡️", hp:2000,
+    note:"Soft side. Hard side needs ~15 rockets — almost always go soft side.",
+    c:{ rocket:8, c4:8, satchel:46 } },
+
+  // ── DOORS ──────────────────────────────────────────────────────────
+  { name:"Wood Door",          cat:"Door", icon:"🚪", hp:200,  note:"",
+    c:{ rocket:1, c4:1, satchel:2, beancan:8 } },
+
+  { name:"Sheet Metal Door",   cat:"Door", icon:"🚪", hp:250,  note:"",
+    c:{ rocket:2, c4:1, satchel:4 } },
+
+  { name:"Sheet Metal Double", cat:"Door", icon:"🚪", hp:500,  note:"Double door.",
+    c:{ rocket:3, c4:2, satchel:9 } },
+
+  { name:"Garage Door",        cat:"Door", icon:"🏠", hp:600,  note:"",
+    c:{ rocket:3, c4:2, satchel:9 } },
+
+  { name:"Armored Door",       cat:"Door", icon:"🔒", hp:1000, note:"",
+    c:{ rocket:4, c4:2, satchel:12 } },
+
+  { name:"Armored Double Door",cat:"Door", icon:"🔒", hp:1600, note:"Double door.",
+    c:{ rocket:6, c4:4, satchel:20 } },
+
+  // ── DEPLOYABLES ────────────────────────────────────────────────────
+  { name:"Auto Turret",     cat:"Deployable", icon:"🎯", hp:750,
+    note:"Not a building block — takes higher explosion damage. 1 C4 or 2 rockets is reliable.",
+    c:{ rocket:2, c4:1, satchel:6 } },
+
+  { name:"Metal Shop Front",cat:"Deployable", icon:"🏪", hp:500,  note:"",
+    c:{ rocket:3, c4:2, satchel:9 } },
+
+  { name:"Locker",          cat:"Deployable", icon:"🗄️", hp:200,  note:"",
+    c:{ rocket:1, c4:1, satchel:2 } },
+
+  { name:"Tool Cupboard",   cat:"Deployable", icon:"⚙️", hp:1000,
+    note:"Top priority — destroying it removes building privilege from defenders.",
+    c:{ rocket:4, c4:2, satchel:12 } },
+
+  { name:"Large Wood Box",  cat:"Deployable", icon:"📦", hp:250,  note:"",
+    c:{ rocket:1, c4:1, satchel:3, beancan:10 } },
+
+  { name:"Small Wood Box",  cat:"Deployable", icon:"📦", hp:100,  note:"",
+    c:{ rocket:1, c4:1, satchel:1, beancan:4 } },
+
+  // ── HIGH WALLS ─────────────────────────────────────────────────────
+  { name:"High Ext. Stone Wall",  cat:"High Wall", icon:"🧱", hp:500,  note:"",
+    c:{ rocket:4, c4:2, satchel:10 } },
+
+  { name:"High Ext. Wooden Wall", cat:"High Wall", icon:"🌲", hp:350,  note:"",
+    c:{ rocket:2, c4:1, satchel:5, beancan:14 } },
+];
+
+let activeCat = "All";
+let picked    = null;
+
+function cat(c, btn) {
+  activeCat = c;
+  picked = null;
+  document.getElementById("result").innerHTML = "";
+  document.querySelectorAll(".fbtn").forEach(b => b.classList.remove("on"));
+  btn.classList.add("on");
+  render();
+}
+
+function visible() {
+  const q = document.getElementById("q").value.toLowerCase();
+  return ITEMS.filter(it =>
+    (activeCat === "All" || it.cat === activeCat) &&
+    it.name.toLowerCase().includes(q)
+  );
+}
+
+function render() {
+  const items = visible();
+  document.getElementById("grid").innerHTML = items.length
+    ? items.map(it => `
+        <div class="card${picked && picked.name===it.name?' picked':''}"
+             onclick="pick('${it.name}')">
+          <div class="ci">${it.icon}</div>
+          <div class="cn">${it.name}</div>
+          <div class="ch">${it.hp} HP</div>
+        </div>`).join("")
+    : `<div class="empty">No targets match.</div>`;
+}
+
+function pick(name) {
+  picked = ITEMS.find(i => i.name === name);
+  render();
+  showResult();
+  setTimeout(() => document.getElementById("result")
+    .scrollIntoView({ behavior:"smooth", block:"nearest" }), 50);
+}
+
+function showResult() {
+  if (!picked) return;
+  const it = picked;
+
+  const opts = Object.entries(it.c).map(([k, n]) => ({
+    key: k, ...EXP[k], count: n, total: n * EXP[k].sulfur
+  }));
+
+  const minCount   = Math.min(...opts.map(o => o.count));
+  const minSulfur  = Math.min(...opts.map(o => o.total));
+
+  const rows = opts.map(o => {
+    const fast = o.count   === minCount;
+    const eco  = o.total   === minSulfur;
+    let badges = "";
+    if (fast && eco)  badges = `<span class="badge b-best">⭐ Fastest &amp; Best Value</span>`;
+    else if (fast)    badges = `<span class="badge b-fast">⚡ Fastest</span>`;
+    else if (eco)     badges = `<span class="badge b-eco">💰 Most Efficient</span>`;
+
+    return `<div class="row">
+      <div class="ei">${o.icon}</div>
+      <div class="ed">
+        <div class="en">${o.label}</div>
+        <div class="eb">${badges}</div>
+      </div>
+      <div class="ec">×${o.count}</div>
+      <div class="es">⛏️ <span>${o.total.toLocaleString()}</span></div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("result").innerHTML = `
+    <div class="result">
+      <div class="rhead">
+        <div class="ri">${it.icon}</div>
+        <div class="rn">${it.name}</div>
+        <div class="rhp">${it.hp} HP</div>
+      </div>
+      ${rows}
+      ${it.note ? `<div class="rnote">ℹ️ ${it.note}</div>` : ""}
+    </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
