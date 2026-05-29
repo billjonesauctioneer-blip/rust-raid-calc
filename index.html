@@ -5,291 +5,220 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rust Raid Calc</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body {
-  background: #0d1117;
-  color: #e6edf3;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  min-height: 100vh;
-  max-width: 600px;
-  margin: 0 auto;
+  background: #0d1117; color: #e6edf3;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh; max-width: 640px; margin: 0 auto;
 }
 header {
-  background: #161b22;
-  border-bottom: 2px solid #ff6b35;
-  padding: 14px 16px 12px;
-  text-align: center;
+  background: #161b22; border-bottom: 2px solid #ff6b35;
+  padding: 13px 16px 11px; text-align: center;
 }
 header h1 { font-size: 1.4rem; font-weight: 800; color: #ff6b35; letter-spacing: 2px; }
-header p  { font-size: 0.75rem; color: #8b949e; margin-top: 2px; }
+header p  { font-size: 0.72rem; color: #8b949e; margin-top: 2px; }
 
-.search-wrap {
-  padding: 10px 12px 6px;
-  background: #161b22;
-}
+.controls { background: #161b22; padding: 8px 12px 10px; border-bottom: 1px solid #30363d; }
 .search-wrap input {
-  width: 100%; padding: 9px 12px;
-  background: #0d1117; border: 1px solid #30363d;
-  border-radius: 8px; color: #e6edf3; font-size: 0.9rem; outline: none;
+  width: 100%; padding: 9px 12px; background: #0d1117;
+  border: 1px solid #30363d; border-radius: 8px; color: #e6edf3;
+  font-size: 0.9rem; outline: none;
 }
 .search-wrap input:focus { border-color: #ff6b35; }
 .search-wrap input::placeholder { color: #6e7681; }
 
-.filters {
-  display: flex; gap: 7px; padding: 6px 12px 10px;
-  overflow-x: auto; background: #161b22;
-  border-bottom: 1px solid #30363d;
-  scrollbar-width: none;
+.side-toggle { display: flex; gap: 0; margin-top: 9px; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; }
+.side-toggle button {
+  flex: 1; padding: 8px; background: #0d1117; color: #8b949e;
+  border: none; font-size: 0.82rem; font-weight: 600; cursor: pointer;
 }
+.side-toggle button.on { background: #ff6b35; color: #fff; }
+.side-hint { font-size: 0.67rem; color: #6e7681; text-align: center; margin-top: 5px; }
+
+.filters { display: flex; gap: 7px; padding: 9px 12px; overflow-x: auto;
+  background: #161b22; border-bottom: 1px solid #30363d; scrollbar-width: none; }
 .filters::-webkit-scrollbar { display: none; }
-.fbtn {
-  padding: 5px 13px; border-radius: 20px;
-  border: 1px solid #30363d; background: transparent;
-  color: #8b949e; font-size: 0.78rem; white-space: nowrap;
-  cursor: pointer; transition: all 0.15s; flex-shrink: 0;
-}
+.fbtn { padding: 5px 13px; border-radius: 20px; border: 1px solid #30363d;
+  background: transparent; color: #8b949e; font-size: 0.78rem; white-space: nowrap;
+  cursor: pointer; flex-shrink: 0; }
 .fbtn.on { background: #ff6b35; border-color: #ff6b35; color: #fff; font-weight: 700; }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 8px; padding: 12px;
-}
-.card {
-  background: #161b22; border: 1px solid #30363d;
-  border-radius: 10px; padding: 12px 8px;
-  cursor: pointer; text-align: center; transition: all 0.15s;
-}
-.card:hover  { border-color: #ff6b35; background: #1c2128; }
-.card.picked { border-color: #ff6b35; background: #1c2128;
-               box-shadow: 0 0 0 2px rgba(255,107,53,.25); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+  gap: 8px; padding: 12px; }
+.card { background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+  padding: 12px 8px; cursor: pointer; text-align: center; }
+.card:hover { border-color: #ff6b35; background: #1c2128; }
+.card.picked { border-color: #ff6b35; background: #1c2128; box-shadow: 0 0 0 2px rgba(255,107,53,.25); }
 .card .ci { font-size: 1.9rem; margin-bottom: 5px; line-height: 1; }
-.card .cn { font-size: 0.75rem; font-weight: 600; color: #e6edf3; line-height: 1.25; }
-.card .ch { font-size: 0.68rem; color: #6e7681; margin-top: 3px; }
+.card .cn { font-size: 0.75rem; font-weight: 600; line-height: 1.25; }
+.card .ch { font-size: 0.66rem; color: #6e7681; margin-top: 3px; }
 
-/* result */
-.result { margin: 0 12px 16px; border-radius: 12px; overflow: hidden;
-          border: 1px solid #30363d; background: #161b22; }
-.rhead {
-  background: #21262d; padding: 11px 14px;
-  display: flex; align-items: center; gap: 10px;
-  border-bottom: 1px solid #30363d;
-}
+.result { margin: 0 12px 14px; border-radius: 12px; overflow: hidden;
+  border: 1px solid #30363d; background: #161b22; }
+.rhead { background: #21262d; padding: 11px 14px; display: flex; align-items: center;
+  gap: 10px; border-bottom: 1px solid #30363d; }
 .rhead .ri { font-size: 1.4rem; }
-.rhead .rn { font-weight: 700; font-size: 1rem; }
-.rhead .rhp {
-  margin-left: auto; background: #0d1117;
-  border: 1px solid #30363d; border-radius: 6px;
-  padding: 3px 9px; font-size: 0.72rem; color: #ff6b35; font-weight: 700;
-}
+.rhead .rn { font-weight: 700; font-size: 1.02rem; }
+.rhead .rhp { margin-left: auto; background: #0d1117; border: 1px solid #30363d;
+  border-radius: 6px; padding: 3px 9px; font-size: 0.72rem; color: #ff6b35; font-weight: 700; }
 
-.row {
-  display: flex; align-items: center;
-  padding: 11px 14px; border-bottom: 1px solid #21262d; gap: 10px;
-}
+.summary { display: flex; gap: 8px; padding: 10px 12px; background: #0d1117; border-bottom: 1px solid #30363d; }
+.sumcard { flex: 1; border-radius: 8px; padding: 8px 10px; }
+.sumcard.fast { background: rgba(31,111,235,.15); border: 1px solid #1f6feb; }
+.sumcard.eco  { background: rgba(35,134,54,.15); border: 1px solid #238636; }
+.sumcard .slabel { font-size: 0.64rem; text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
+.sumcard.fast .slabel { color: #58a6ff; }
+.sumcard.eco  .slabel { color: #3fb950; }
+.sumcard .sval { font-size: 0.95rem; font-weight: 700; margin-top: 2px; }
+.sumcard .ssub { font-size: 0.68rem; color: #8b949e; margin-top: 1px; }
+
+.row { display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid #21262d; gap: 11px; }
 .row:last-of-type { border-bottom: none; }
-.row .ei { font-size: 1.3rem; width: 28px; text-align: center; }
-.row .ed { flex: 1; }
-.row .en { font-weight: 600; font-size: 0.88rem; }
+.row .ei { font-size: 1.25rem; width: 26px; text-align: center; }
+.row .ed { flex: 1; min-width: 0; }
+.row .en { font-weight: 600; font-size: 0.86rem; }
 .row .eb { display: flex; gap: 5px; margin-top: 3px; flex-wrap: wrap; }
-.badge {
-  font-size: 0.62rem; font-weight: 700;
-  padding: 2px 7px; border-radius: 10px;
-  text-transform: uppercase; letter-spacing: 0.4px;
-}
+.badge { font-size: 0.6rem; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+  text-transform: uppercase; letter-spacing: .4px; }
 .b-fast { background: #1f6feb; color: #fff; }
 .b-eco  { background: #238636; color: #fff; }
-.b-best { background: #9e3c96; color: #fff; }
-
-.row .ec { font-size: 1.1rem; font-weight: 800; color: #ff6b35; width: 36px; text-align: right; }
-.row .es { font-size: 0.78rem; color: #8b949e; width: 110px; text-align: right; }
+.row .ec { font-size: 1.05rem; font-weight: 800; color: #ff6b35; width: 42px; text-align: right; }
+.row .es { font-size: 0.76rem; color: #8b949e; width: 96px; text-align: right; }
 .row .es span { color: #ffd700; font-weight: 700; }
+.row.dim { opacity: .5; }
 
-.rnote {
-  padding: 8px 14px; font-size: 0.72rem; color: #8b949e;
-  background: #0d1117; border-top: 1px solid #30363d; font-style: italic;
-}
-
-.empty { text-align: center; padding: 36px 20px; color: #6e7681; font-size: 0.9rem; }
-
-footer {
-  text-align: center; padding: 18px 16px;
-  color: #484f58; font-size: 0.68rem; line-height: 1.6;
-}
-footer a { color: #6e7681; text-decoration: none; }
+.rnote { padding: 9px 14px; font-size: 0.7rem; color: #8b949e; background: #0d1117;
+  border-top: 1px solid #30363d; line-height: 1.5; }
+.empty { text-align: center; padding: 36px 20px; color: #6e7681; }
+footer { text-align: center; padding: 16px; color: #484f58; font-size: 0.67rem; line-height: 1.7; }
+footer a { color: #6e7681; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>💥 RUST RAID CALC</h1>
-  <p>Fastest vs. Most Efficient — per target</p>
+  <p>Exact RustLabs data · fewest charges vs. cheapest sulfur</p>
 </header>
 
-<div class="search-wrap">
-  <input id="q" type="text" placeholder="Search targets (e.g. armored, door, turret…)" oninput="render()">
+<div class="controls">
+  <div class="search-wrap">
+    <input id="q" type="text" placeholder="Search targets (armored, door, turret…)" oninput="render()">
+  </div>
+  <div class="side-toggle">
+    <button id="softBtn" class="on" onclick="setSide('soft')">Soft Side (inside)</button>
+    <button id="hardBtn" onclick="setSide('hard')">Hard Side (outside)</button>
+  </div>
+  <div class="side-hint">Aim for the soft side when you can — it's the cheaper face. Walls cost the same both sides for rockets/C4/satchels; only bullets &amp; grenades differ.</div>
 </div>
 
 <div class="filters" id="filters">
-  <button class="fbtn on" onclick="cat('All',this)">All</button>
-  <button class="fbtn" onclick="cat('Wall',this)">Walls</button>
-  <button class="fbtn" onclick="cat('Door',this)">Doors</button>
-  <button class="fbtn" onclick="cat('Deployable',this)">Deployables</button>
-  <button class="fbtn" onclick="cat('High Wall',this)">High Walls</button>
+  <button class="fbtn on" onclick="setCat('All',this)">All</button>
+  <button class="fbtn" onclick="setCat('Wall',this)">Walls</button>
+  <button class="fbtn" onclick="setCat('Door',this)">Doors</button>
+  <button class="fbtn" onclick="setCat('Deployable',this)">Deployables</button>
+  <button class="fbtn" onclick="setCat('High Wall',this)">High Walls</button>
 </div>
 
 <div id="grid" class="grid"></div>
 <div id="result"></div>
 
 <footer>
-  Wall values = soft side unless noted. Satchels have a random re-arm chance — carry extras.<br>
-  Data from community wikis &amp; <a href="https://rustlabs.com" target="_blank">rustlabs.com</a>. Last verified 2025.
+  Numbers pulled directly from <a href="https://rustlabs.com" target="_blank">RustLabs</a> (vanilla server values).<br>
+  Base damage verified against Rust Console Edition: Satchel 75 · C4 550 · Rocket 275 · Explo 5.56 = 50.<br>
+  Console Edition tracks PC for raiding; if a value ever looks off, RustLabs is the source of truth.
 </footer>
 
 <script>
-// Sulfur cost per item (total including all crafting materials)
-const EXP = {
-  rocket:  { label: "Rocket",          icon: "🚀", sulfur: 1400 },
-  c4:      { label: "Timed C4",        icon: "💣", sulfur: 2200 },
-  satchel: { label: "Satchel Charge",  icon: "🧨", sulfur:  480 },
-  beancan: { label: "Beancan Grenade", icon: "💥", sulfur:  120 },
-};
-
-// counts = minimum needed to destroy (soft side for walls where applicable)
+// ===== DATA (generated from RustLabs) =====
+const EXP_META = {"satchel": {"label": "Satchel Charge", "icon": "🧨", "unit": 480, "base": "75 dmg"}, "c4": {"label": "Timed C4", "icon": "💣", "unit": 2200, "base": "550 dmg"}, "rocket": {"label": "Rocket", "icon": "🚀", "unit": 1400, "base": "275 dmg"}, "beancan": {"label": "Beancan Grenade", "icon": "💥", "unit": 120, "base": "~40 dmg"}, "he40": {"label": "40mm HE Grenade", "icon": "🎆", "unit": 390, "base": "grenade"}, "explo556": {"label": "Explosive 5.56", "icon": "🟡", "unit": 25, "base": "50 dmg/rd"}, "hvrocket": {"label": "HV Rocket", "icon": "🚀", "unit": 200, "base": "low dmg"}};
+const EXP_ORDER = ["satchel", "c4", "rocket", "beancan", "he40", "explo556", "hvrocket"];
 const ITEMS = [
-  // ── WALLS ──────────────────────────────────────────────────────────
-  { name:"Wood Wall",     cat:"Wall",      icon:"🪵", hp:250,
-    note:"No side preference on wood.",
-    c:{ rocket:2, c4:1, satchel:3, beancan:10 } },
-
-  { name:"Stone Wall",    cat:"Wall",      icon:"🪨", hp:500,
-    note:"Soft side. Hard side needs ~5 rockets / 2 C4 / 12 satchels.",
-    c:{ rocket:4, c4:1, satchel:10 } },
-
-  { name:"Metal Wall",    cat:"Wall",      icon:"🔩", hp:1000,
-    note:"Soft side. Hard side needs ~8 rockets / 8 C4 / 40 satchels.",
-    c:{ rocket:4, c4:4, satchel:23 } },
-
-  { name:"Armored Wall",  cat:"Wall",      icon:"🛡️", hp:2000,
-    note:"Soft side. Hard side needs ~15 rockets — almost always go soft side.",
-    c:{ rocket:8, c4:8, satchel:46 } },
-
-  // ── DOORS ──────────────────────────────────────────────────────────
-  { name:"Wood Door",          cat:"Door", icon:"🚪", hp:200,  note:"",
-    c:{ rocket:1, c4:1, satchel:2, beancan:8 } },
-
-  { name:"Sheet Metal Door",   cat:"Door", icon:"🚪", hp:250,  note:"",
-    c:{ rocket:2, c4:1, satchel:4 } },
-
-  { name:"Sheet Metal Double", cat:"Door", icon:"🚪", hp:500,  note:"Double door.",
-    c:{ rocket:3, c4:2, satchel:9 } },
-
-  { name:"Garage Door",        cat:"Door", icon:"🏠", hp:600,  note:"",
-    c:{ rocket:3, c4:2, satchel:9 } },
-
-  { name:"Armored Door",       cat:"Door", icon:"🔒", hp:1000, note:"",
-    c:{ rocket:4, c4:2, satchel:12 } },
-
-  { name:"Armored Double Door",cat:"Door", icon:"🔒", hp:1600, note:"Double door.",
-    c:{ rocket:6, c4:4, satchel:20 } },
-
-  // ── DEPLOYABLES ────────────────────────────────────────────────────
-  { name:"Auto Turret",     cat:"Deployable", icon:"🎯", hp:750,
-    note:"Not a building block — takes higher explosion damage. 1 C4 or 2 rockets is reliable.",
-    c:{ rocket:2, c4:1, satchel:6 } },
-
-  { name:"Metal Shop Front",cat:"Deployable", icon:"🏪", hp:500,  note:"",
-    c:{ rocket:3, c4:2, satchel:9 } },
-
-  { name:"Locker",          cat:"Deployable", icon:"🗄️", hp:200,  note:"",
-    c:{ rocket:1, c4:1, satchel:2 } },
-
-  { name:"Tool Cupboard",   cat:"Deployable", icon:"⚙️", hp:1000,
-    note:"Top priority — destroying it removes building privilege from defenders.",
-    c:{ rocket:4, c4:2, satchel:12 } },
-
-  { name:"Large Wood Box",  cat:"Deployable", icon:"📦", hp:250,  note:"",
-    c:{ rocket:1, c4:1, satchel:3, beancan:10 } },
-
-  { name:"Small Wood Box",  cat:"Deployable", icon:"📦", hp:100,  note:"",
-    c:{ rocket:1, c4:1, satchel:1, beancan:4 } },
-
-  // ── HIGH WALLS ─────────────────────────────────────────────────────
-  { name:"High Ext. Stone Wall",  cat:"High Wall", icon:"🧱", hp:500,  note:"",
-    c:{ rocket:4, c4:2, satchel:10 } },
-
-  { name:"High Ext. Wooden Wall", cat:"High Wall", icon:"🌲", hp:350,  note:"",
-    c:{ rocket:2, c4:1, satchel:5, beancan:14 } },
+{"name":"Wood Wall","cat":"Wall","icon":"🪵","hp":250,"exp":{"satchel":{"soft":3,"hard":3,"softSulfur":1440,"hardSulfur":1440,"same":true},"c4":{"soft":1,"hard":1,"softSulfur":2200,"hardSulfur":2200,"same":true},"rocket":{"soft":2,"hard":2,"softSulfur":2800,"hardSulfur":2800,"same":true},"beancan":{"soft":13,"hard":13,"softSulfur":1560,"hardSulfur":1560,"same":true},"he40":{"soft":8,"hard":8,"softSulfur":3120,"hardSulfur":3120,"same":true},"explo556":{"soft":44,"hard":49,"softSulfur":1100,"hardSulfur":1225,"same":false},"hvrocket":{"soft":8,"hard":9,"softSulfur":1600,"hardSulfur":1800,"same":false}}},
+{"name":"Stone Wall","cat":"Wall","icon":"🪨","hp":500,"exp":{"satchel":{"soft":10,"hard":10,"softSulfur":4800,"hardSulfur":4800,"same":true},"c4":{"soft":2,"hard":2,"softSulfur":4400,"hardSulfur":4400,"same":true},"rocket":{"soft":4,"hard":4,"softSulfur":5600,"hardSulfur":5600,"same":true},"beancan":{"soft":46,"hard":46,"softSulfur":5520,"hardSulfur":5520,"same":true},"he40":{"soft":27,"hard":29,"softSulfur":10530,"hardSulfur":11310,"same":false},"explo556":{"soft":173,"hard":185,"softSulfur":4325,"hardSulfur":4625,"same":false},"hvrocket":{"soft":31,"hard":32,"softSulfur":6200,"hardSulfur":6400,"same":false}}},
+{"name":"Sheet Metal Wall","cat":"Wall","icon":"🔩","hp":1000,"exp":{"satchel":{"soft":23,"hard":23,"softSulfur":11040,"hardSulfur":11040,"same":true},"c4":{"soft":4,"hard":4,"softSulfur":8800,"hardSulfur":8800,"same":true},"rocket":{"soft":8,"hard":8,"softSulfur":11200,"hardSulfur":11200,"same":true},"beancan":{"soft":112,"hard":112,"softSulfur":13440,"hardSulfur":13440,"same":true},"he40":{"soft":56,"hard":57,"softSulfur":21840,"hardSulfur":22230,"same":false},"explo556":{"soft":399,"hard":400,"softSulfur":9975,"hardSulfur":10000,"same":false},"hvrocket":{"soft":67,"hard":67,"softSulfur":13400,"hardSulfur":13400,"same":true}}},
+{"name":"Armored Wall","cat":"Wall","icon":"🛡️","hp":2000,"exp":{"satchel":{"soft":46,"hard":46,"softSulfur":22080,"hardSulfur":22080,"same":true},"c4":{"soft":8,"hard":8,"softSulfur":17600,"hardSulfur":17600,"same":true},"rocket":{"soft":15,"hard":15,"softSulfur":21000,"hardSulfur":21000,"same":true},"beancan":{"soft":223,"hard":223,"softSulfur":26760,"hardSulfur":26760,"same":true},"he40":{"soft":111,"hard":114,"softSulfur":43290,"hardSulfur":44460,"same":false},"explo556":{"soft":798,"hard":799,"softSulfur":19950,"hardSulfur":19975,"same":false},"hvrocket":{"soft":134,"hard":134,"softSulfur":26800,"hardSulfur":26800,"same":true}}},
+{"name":"Wooden Door","cat":"Door","icon":"🚪","hp":200,"exp":{"satchel":{"soft":2,"hard":2,"softSulfur":960,"hardSulfur":960,"same":true},"c4":{"soft":1,"hard":1,"softSulfur":2200,"hardSulfur":2200,"same":true},"rocket":{"soft":1,"hard":1,"softSulfur":1400,"hardSulfur":1400,"same":true},"beancan":{"soft":6,"hard":6,"softSulfur":720,"hardSulfur":720,"same":true},"he40":{"soft":3,"hard":3,"softSulfur":1170,"hardSulfur":1170,"same":true},"explo556":{"soft":19,"hard":19,"softSulfur":475,"hardSulfur":475,"same":true},"hvrocket":{"soft":4,"hard":4,"softSulfur":800,"hardSulfur":800,"same":true}}},
+{"name":"Sheet Metal Door","cat":"Door","icon":"🚪","hp":250,"exp":{"satchel":{"soft":4,"hard":4,"softSulfur":1920,"hardSulfur":1920,"same":true},"c4":{"soft":1,"hard":1,"softSulfur":2200,"hardSulfur":2200,"same":true},"rocket":{"soft":2,"hard":2,"softSulfur":2800,"hardSulfur":2800,"same":true},"beancan":{"soft":18,"hard":18,"softSulfur":2160,"hardSulfur":2160,"same":true},"he40":{"soft":9,"hard":9,"softSulfur":3510,"hardSulfur":3510,"same":true},"explo556":{"soft":63,"hard":63,"softSulfur":1575,"hardSulfur":1575,"same":true},"hvrocket":{"soft":11,"hard":11,"softSulfur":2200,"hardSulfur":2200,"same":true}}},
+{"name":"Garage Door","cat":"Door","icon":"🏠","hp":600,"exp":{"satchel":{"soft":9,"hard":9,"softSulfur":4320,"hardSulfur":4320,"same":true},"c4":{"soft":2,"hard":2,"softSulfur":4400,"hardSulfur":4400,"same":true},"rocket":{"soft":3,"hard":3,"softSulfur":4200,"hardSulfur":4200,"same":true},"beancan":{"soft":42,"hard":42,"softSulfur":5040,"hardSulfur":5040,"same":true},"he40":{"soft":22,"hard":22,"softSulfur":8580,"hardSulfur":8580,"same":true},"explo556":{"soft":150,"hard":150,"softSulfur":3750,"hardSulfur":3750,"same":true},"hvrocket":{"soft":25,"hard":25,"softSulfur":5000,"hardSulfur":5000,"same":true}}},
+{"name":"Armored Door","cat":"Door","icon":"🔒","hp":1000,"exp":{"satchel":{"soft":15,"hard":15,"softSulfur":7200,"hardSulfur":7200,"same":true},"c4":{"soft":3,"hard":3,"softSulfur":6600,"hardSulfur":6600,"same":true},"rocket":{"soft":5,"hard":5,"softSulfur":7000,"hardSulfur":7000,"same":true},"beancan":{"soft":69,"hard":69,"softSulfur":8280,"hardSulfur":8280,"same":true},"he40":{"soft":36,"hard":36,"softSulfur":14040,"hardSulfur":14040,"same":true},"explo556":{"soft":250,"hard":250,"softSulfur":6250,"hardSulfur":6250,"same":true},"hvrocket":{"soft":42,"hard":42,"softSulfur":8400,"hardSulfur":8400,"same":true}}},
+{"name":"Tool Cupboard","cat":"Deployable","icon":"⚙️","hp":100,"exp":{"satchel":{"soft":1,"hard":1,"softSulfur":480,"hardSulfur":480,"same":true},"c4":{"soft":1,"hard":1,"softSulfur":2200,"hardSulfur":2200,"same":true},"rocket":{"soft":1,"hard":1,"softSulfur":1400,"hardSulfur":1400,"same":true},"beancan":{"soft":4,"hard":4,"softSulfur":480,"hardSulfur":480,"same":true},"he40":{"soft":2,"hard":2,"softSulfur":780,"hardSulfur":780,"same":true},"explo556":{"soft":10,"hard":10,"softSulfur":250,"hardSulfur":250,"same":true},"hvrocket":{"soft":2,"hard":2,"softSulfur":400,"hardSulfur":400,"same":true}}},
+{"name":"Auto Turret","cat":"Deployable","icon":"🎯","hp":1000,"exp":{"satchel":{"soft":2,"hard":2,"softSulfur":960,"hardSulfur":960,"same":true},"c4":{"soft":1,"hard":1,"softSulfur":2200,"hardSulfur":2200,"same":true},"rocket":{"soft":4,"hard":4,"softSulfur":5600,"hardSulfur":5600,"same":true},"beancan":{"soft":16,"hard":16,"softSulfur":1920,"hardSulfur":1920,"same":true},"he40":{"soft":16,"hard":16,"softSulfur":6240,"hardSulfur":6240,"same":true},"explo556":{"soft":112,"hard":112,"softSulfur":2800,"hardSulfur":2800,"same":true},"hvrocket":{"soft":3,"hard":3,"softSulfur":600,"hardSulfur":600,"same":true}}},
+{"name":"Large Wood Box","cat":"Deployable","icon":"📦","hp":300,"exp":{"satchel":{"soft":1,"hard":1,"softSulfur":480,"hardSulfur":480,"same":true},"c4":{"soft":1,"hard":1,"softSulfur":2200,"hardSulfur":2200,"same":true},"rocket":{"soft":1,"hard":1,"softSulfur":1400,"hardSulfur":1400,"same":true},"beancan":{"soft":5,"hard":5,"softSulfur":600,"hardSulfur":600,"same":true},"he40":{"soft":5,"hard":5,"softSulfur":1950,"hardSulfur":1950,"same":true},"explo556":{"soft":34,"hard":34,"softSulfur":850,"hardSulfur":850,"same":true},"hvrocket":{"soft":2,"hard":2,"softSulfur":400,"hardSulfur":400,"same":true}}},
+{"name":"Locker","cat":"Deployable","icon":"🗄️","hp":500,"exp":{"satchel":{"soft":1,"hard":1,"softSulfur":480,"hardSulfur":480,"same":true},"c4":{"soft":1,"hard":1,"softSulfur":2200,"hardSulfur":2200,"same":true},"rocket":{"soft":2,"hard":2,"softSulfur":2800,"hardSulfur":2800,"same":true},"beancan":{"soft":8,"hard":8,"softSulfur":960,"hardSulfur":960,"same":true},"he40":{"soft":8,"hard":8,"softSulfur":3120,"hardSulfur":3120,"same":true},"explo556":{"soft":56,"hard":56,"softSulfur":1400,"hardSulfur":1400,"same":true},"hvrocket":{"soft":3,"hard":3,"softSulfur":600,"hardSulfur":600,"same":true}}},
+{"name":"Metal Shop Front","cat":"Deployable","icon":"🏪","hp":750,"exp":{"satchel":{"soft":18,"hard":18,"softSulfur":8640,"hardSulfur":8640,"same":true},"c4":{"soft":3,"hard":3,"softSulfur":6600,"hardSulfur":6600,"same":true},"rocket":{"soft":6,"hard":6,"softSulfur":8400,"hardSulfur":8400,"same":true},"beancan":{"soft":99,"hard":99,"softSulfur":11880,"hardSulfur":11880,"same":true},"he40":{"soft":43,"hard":43,"softSulfur":16770,"hardSulfur":16770,"same":true},"explo556":{"soft":300,"hard":300,"softSulfur":7500,"hardSulfur":7500,"same":true},"hvrocket":{"soft":50,"hard":50,"softSulfur":10000,"hardSulfur":10000,"same":true}}},
+{"name":"High Ext. Stone Wall","cat":"High Wall","icon":"🧱","hp":500,"exp":{"satchel":{"soft":10,"hard":10,"softSulfur":4800,"hardSulfur":4800,"same":true},"c4":{"soft":2,"hard":2,"softSulfur":4400,"hardSulfur":4400,"same":true},"rocket":{"soft":4,"hard":4,"softSulfur":5600,"hardSulfur":5600,"same":true},"beancan":{"soft":46,"hard":46,"softSulfur":5520,"hardSulfur":5520,"same":true},"he40":{"soft":29,"hard":29,"softSulfur":11310,"hardSulfur":11310,"same":true},"explo556":{"soft":185,"hard":185,"softSulfur":4625,"hardSulfur":4625,"same":true},"hvrocket":{"soft":32,"hard":32,"softSulfur":6400,"hardSulfur":6400,"same":true}}},
+{"name":"High Ext. Wood Wall","cat":"High Wall","icon":"🌲","hp":500,"exp":{"satchel":{"soft":6,"hard":6,"softSulfur":2880,"hardSulfur":2880,"same":true},"c4":{"soft":2,"hard":2,"softSulfur":4400,"hardSulfur":4400,"same":true},"rocket":{"soft":3,"hard":3,"softSulfur":4200,"hardSulfur":4200,"same":true},"beancan":{"soft":26,"hard":26,"softSulfur":3120,"hardSulfur":3120,"same":true},"he40":{"soft":16,"hard":16,"softSulfur":6240,"hardSulfur":6240,"same":true},"explo556":{"soft":98,"hard":98,"softSulfur":2450,"hardSulfur":2450,"same":true},"hvrocket":{"soft":18,"hard":18,"softSulfur":3600,"hardSulfur":3600,"same":true}}}
 ];
+// ===== END DATA =====
 
+let side = "soft";
 let activeCat = "All";
-let picked    = null;
+let picked = null;
 
-function cat(c, btn) {
-  activeCat = c;
-  picked = null;
+function setSide(s) {
+  side = s;
+  document.getElementById("softBtn").classList.toggle("on", s === "soft");
+  document.getElementById("hardBtn").classList.toggle("on", s === "hard");
+  if (picked) showResult();
+}
+function setCat(c, btn) {
+  activeCat = c; picked = null;
   document.getElementById("result").innerHTML = "";
   document.querySelectorAll(".fbtn").forEach(b => b.classList.remove("on"));
   btn.classList.add("on");
   render();
 }
-
 function visible() {
-  const q = document.getElementById("q").value.toLowerCase();
+  const ql = document.getElementById("q").value.toLowerCase();
   return ITEMS.filter(it =>
     (activeCat === "All" || it.cat === activeCat) &&
-    it.name.toLowerCase().includes(q)
-  );
+    it.name.toLowerCase().includes(ql));
 }
-
 function render() {
   const items = visible();
   document.getElementById("grid").innerHTML = items.length
     ? items.map(it => `
-        <div class="card${picked && picked.name===it.name?' picked':''}"
-             onclick="pick('${it.name}')">
-          <div class="ci">${it.icon}</div>
-          <div class="cn">${it.name}</div>
-          <div class="ch">${it.hp} HP</div>
-        </div>`).join("")
+      <div class="card${picked && picked.name===it.name?' picked':''}" onclick="pick('${it.name.replace(/'/g,"\\'")}')">
+        <div class="ci">${it.icon}</div>
+        <div class="cn">${it.name}</div>
+        <div class="ch">${it.hp.toLocaleString()} HP</div>
+      </div>`).join("")
     : `<div class="empty">No targets match.</div>`;
 }
-
 function pick(name) {
   picked = ITEMS.find(i => i.name === name);
-  render();
-  showResult();
-  setTimeout(() => document.getElementById("result")
-    .scrollIntoView({ behavior:"smooth", block:"nearest" }), 50);
+  render(); showResult();
+  setTimeout(() => document.getElementById("result").scrollIntoView({behavior:"smooth",block:"nearest"}), 50);
 }
-
 function showResult() {
   if (!picked) return;
   const it = picked;
-
-  const opts = Object.entries(it.c).map(([k, n]) => ({
-    key: k, ...EXP[k], count: n, total: n * EXP[k].sulfur
-  }));
-
-  const minCount   = Math.min(...opts.map(o => o.count));
-  const minSulfur  = Math.min(...opts.map(o => o.total));
+  const opts = EXP_ORDER.filter(k => it.exp[k]).map(k => {
+    const e = it.exp[k];
+    const count = side === "soft" ? e.soft : e.hard;
+    const sulfur = side === "soft" ? e.softSulfur : e.hardSulfur;
+    return { key:k, label:EXP_META[k].label, icon:EXP_META[k].icon, count, sulfur, varies:!e.same };
+  });
+  const minCount  = Math.min(...opts.map(o => o.count));
+  const minSulfur = Math.min(...opts.map(o => o.sulfur));
+  const fastest = opts.filter(o => o.count === minCount).sort((a,b)=>a.sulfur-b.sulfur)[0];
+  const cheapest = opts.filter(o => o.sulfur === minSulfur).sort((a,b)=>a.count-b.count)[0];
 
   const rows = opts.map(o => {
-    const fast = o.count   === minCount;
-    const eco  = o.total   === minSulfur;
+    const isFast = o.count === minCount, isEco = o.sulfur === minSulfur;
     let badges = "";
-    if (fast && eco)  badges = `<span class="badge b-best">⭐ Fastest &amp; Best Value</span>`;
-    else if (fast)    badges = `<span class="badge b-fast">⚡ Fastest</span>`;
-    else if (eco)     badges = `<span class="badge b-eco">💰 Most Efficient</span>`;
-
-    return `<div class="row">
+    if (isFast) badges += `<span class="badge b-fast">⚡ Fewest</span>`;
+    if (isEco)  badges += `<span class="badge b-eco">💰 Cheapest</span>`;
+    const dim = (!isFast && !isEco) ? " dim" : "";
+    return `<div class="row${dim}">
       <div class="ei">${o.icon}</div>
       <div class="ed">
-        <div class="en">${o.label}</div>
+        <div class="en">${o.label}${o.varies?' <span style="color:#6e7681;font-size:.7rem">(side matters)</span>':''}</div>
         <div class="eb">${badges}</div>
       </div>
-      <div class="ec">×${o.count}</div>
-      <div class="es">⛏️ <span>${o.total.toLocaleString()}</span></div>
+      <div class="ec">×${o.count.toLocaleString()}</div>
+      <div class="es">⛏️ <span>${o.sulfur.toLocaleString()}</span></div>
     </div>`;
   }).join("");
 
@@ -298,13 +227,24 @@ function showResult() {
       <div class="rhead">
         <div class="ri">${it.icon}</div>
         <div class="rn">${it.name}</div>
-        <div class="rhp">${it.hp} HP</div>
+        <div class="rhp">${it.hp.toLocaleString()} HP · ${side} side</div>
+      </div>
+      <div class="summary">
+        <div class="sumcard fast">
+          <div class="slabel">⚡ Fastest</div>
+          <div class="sval">${fastest.count}× ${fastest.label}</div>
+          <div class="ssub">${fastest.sulfur.toLocaleString()} sulfur</div>
+        </div>
+        <div class="sumcard eco">
+          <div class="slabel">💰 Most Efficient</div>
+          <div class="sval">${cheapest.count}× ${cheapest.label}</div>
+          <div class="ssub">${cheapest.sulfur.toLocaleString()} sulfur</div>
+        </div>
       </div>
       ${rows}
-      ${it.note ? `<div class="rnote">ℹ️ ${it.note}</div>` : ""}
+      <div class="rnote">⛏️ = total sulfur to craft. <b>Fewest</b> = least charges to place (fastest breach). <b>Cheapest</b> = lowest sulfur cost. Explosive 5.56 &amp; beancans are cheap but slow and loud.</div>
     </div>`;
 }
-
 render();
 </script>
 </body>
